@@ -5,11 +5,8 @@ metadata:
   namespace: kube-system
 data:
   dnsconfig.yaml: |
-    nameservers:
-      - 1.2.3.4
-    searches:
-      - my.dns.search.suffix
     options:
-      - name: ndots
-        value: "2"
-      - name: edns0
+    - name: ndots
+      value: "1"
+    searches:
+    - svc.cluster.local
