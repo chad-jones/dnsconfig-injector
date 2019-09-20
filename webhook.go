@@ -7,8 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-
-    "github.com/ghodss/yaml"
+	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
 	"k8s.io/api/admission/v1beta1"
 	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
@@ -16,7 +15,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
-	"k8s.io/kubernetes/pkg/apis/core/v1"
+	v1 "k8s.io/kubernetes/pkg/apis/core/v1"
 )
 
 var (
@@ -25,7 +24,7 @@ var (
 	deserializer  = codecs.UniversalDeserializer()
 )
 
-var ignoredNamespaces = []string {
+var ignoredNamespaces = []string{
 	metav1.NamespaceSystem,
 	metav1.NamespacePublic,
 }
@@ -36,15 +35,15 @@ const (
 )
 
 type WebhookServer struct {
-	dnsConfig    *corev1.PodDNSConfig
-	server           *http.Server
+	dnsConfig *corev1.PodDNSConfig
+	server    *http.Server
 }
 
 type WhSvrParameters struct {
-	port int                 // webhook server port
-	certFile string          // path to the x509 certificate for https
-	keyFile string           // path to the x509 private key matching `CertFile`
-	dnsCfgFile string    // path to dns injector configuration file
+	port       int    // webhook server port
+	certFile   string // path to the x509 certificate for https
+	keyFile    string // path to the x509 private key matching `CertFile`
+	dnsCfgFile string // path to dns injector configuration file
 }
 
 type patchOperation struct {
@@ -61,14 +60,14 @@ func init() {
 
 func loadConfig(configFile string) (*corev1.PodDNSConfig, error) {
 	var cfg corev1.PodDNSConfig
-	 data, err := ioutil.ReadFile(configFile)
-	 if err != nil {
-	 	return nil, err
-	 }
-	 if err := yaml.Unmarshal(data, &cfg); err != nil {
-	 	return nil, err
-	 }
-	 glog.Infof("Load DNS configuration [%#v]", cfg)
+	data, err := ioutil.ReadFile(configFile)
+	if err != nil {
+		return nil, err
+	}
+	if err := yaml.Unmarshal(data, &cfg); err != nil {
+		return nil, err
+	}
+	glog.Infof("Load DNS configuration [%#v]", cfg)
 	return &cfg, nil
 }
 
@@ -86,11 +85,11 @@ func mutationRequired(ignoredList []string, metadata *metav1.ObjectMeta) bool {
 	}
 
 	status := annotations[admissionWebhookAnnotationStatusKey]
-	
+
 	// determine whether to perform mutation based on annotation for the target resource
 	var required bool
 	if strings.ToLower(status) == "injected" {
-		required = false;
+		required = false
 	} else {
 		switch strings.ToLower(annotations[admissionWebhookAnnotationInjectKey]) {
 		default:
@@ -99,17 +98,16 @@ func mutationRequired(ignoredList []string, metadata *metav1.ObjectMeta) bool {
 			required = false
 		}
 	}
-	
+
 	glog.Infof("Mutation policy for %v/%v: status: %q required:%v", metadata.Namespace, metadata.Name, status, required)
 	return required
 }
-
 
 func updateAnnotation(target map[string]string, added map[string]string) (patch []patchOperation) {
 	for key, value := range added {
 		if target == nil || target[key] == "" {
 			target = map[string]string{}
-			patch = append(patch, patchOperation {
+			patch = append(patch, patchOperation{
 				Op:   "add",
 				Path: "/metadata/annotations",
 				Value: map[string]string{
@@ -117,7 +115,7 @@ func updateAnnotation(target map[string]string, added map[string]string) (patch 
 				},
 			})
 		} else {
-			patch = append(patch, patchOperation {
+			patch = append(patch, patchOperation{
 				Op:    "replace",
 				Path:  "/metadata/annotations/" + key,
 				Value: value,
@@ -127,23 +125,23 @@ func updateAnnotation(target map[string]string, added map[string]string) (patch 
 	return patch
 }
 
-func addDNSConfig(p corev1.PodSpec,config corev1.PodDNSConfig , basePath string) (patch []patchOperation) {
-		glog.Infof("Add dnsconfig to Pod [%#v]", config)
-		if p.DNSConfig !=nil{
-			glog.Infof("Add dnsconfig to Pod [%#v] Skipped", config)
-			return []patchOperation{}
-		}
-		return append(patch, patchOperation {
-			Op:    "add",
-			Path:  basePath,
-			Value: config,
-		})
+func addDNSConfig(p corev1.PodSpec, config corev1.PodDNSConfig, basePath string) (patch []patchOperation) {
+	glog.Infof("Add dnsconfig to Pod [%#v]", config)
+	if p.DNSConfig != nil {
+		glog.Infof("Add dnsconfig to Pod [%#v] Skipped", config)
+		return []patchOperation{}
+	}
+	return append(patch, patchOperation{
+		Op:    "add",
+		Path:  basePath,
+		Value: config,
+	})
 }
 
 // create mutation patch for resoures
 func createPatch(pod *corev1.Pod, c corev1.PodDNSConfig, annotations map[string]string) ([]byte, error) {
 	var patch []patchOperation
-	patch = append(patch, addDNSConfig(pod.Spec,c, "/spec/dnsConfig")...)
+	patch = append(patch, addDNSConfig(pod.Spec, c, "/spec/dnsConfig")...)
 	patch = append(patch, updateAnnotation(pod.Annotations, annotations)...)
 	return json.Marshal(patch)
 }
@@ -154,8 +152,8 @@ func (whsvr *WebhookServer) mutate(ar *v1beta1.AdmissionReview) *v1beta1.Admissi
 	var pod corev1.Pod
 	if err := json.Unmarshal(req.Object.Raw, &pod); err != nil {
 		glog.Errorf("Could not unmarshal raw object: %v", err)
-		return &v1beta1.AdmissionResponse {
-			Result: &metav1.Status {
+		return &v1beta1.AdmissionResponse{
+			Result: &metav1.Status{
 				Message: err.Error(),
 			},
 		}
@@ -163,27 +161,27 @@ func (whsvr *WebhookServer) mutate(ar *v1beta1.AdmissionReview) *v1beta1.Admissi
 
 	glog.Infof("AdmissionReview for Kind=[%v], Namespace=%v Name=%v (%v) UID=%v patchOperation=%v UserInfo=%v",
 		req.Kind, req.Namespace, req.Name, pod.Name, req.UID, req.Operation, req.UserInfo)
-	
+
 	// determine whether to perform mutation
 	if !mutationRequired(ignoredNamespaces, &pod.ObjectMeta) {
 		glog.Infof("Skipping mutation for %s/%s due to policy check", pod.Namespace, pod.Name)
-		return &v1beta1.AdmissionResponse {
-			Allowed: true, 
+		return &v1beta1.AdmissionResponse{
+			Allowed: true,
 		}
 	}
-	
+
 	annotations := map[string]string{admissionWebhookAnnotationStatusKey: "injected"}
 	patchBytes, err := createPatch(&pod, *whsvr.dnsConfig, annotations)
 	if err != nil {
-		return &v1beta1.AdmissionResponse {
-			Result: &metav1.Status {
+		return &v1beta1.AdmissionResponse{
+			Result: &metav1.Status{
 				Message: err.Error(),
 			},
 		}
 	}
-	
+
 	glog.Infof("AdmissionResponse: patch=%v\n", string(patchBytes))
-	return &v1beta1.AdmissionResponse {
+	return &v1beta1.AdmissionResponse{
 		Allowed: true,
 		Patch:   patchBytes,
 		PatchType: func() *v1beta1.PatchType {
@@ -195,7 +193,7 @@ func (whsvr *WebhookServer) mutate(ar *v1beta1.AdmissionReview) *v1beta1.Admissi
 
 // Serve method for webhook server
 func (whsvr *WebhookServer) serve(w http.ResponseWriter, r *http.Request) {
-	glog.Infof("Receiving wenhook request ...")
+	glog.Infof("Receiving webhook request ...")
 	var body []byte
 	if r.Body != nil {
 		if data, err := ioutil.ReadAll(r.Body); err == nil {
@@ -220,8 +218,8 @@ func (whsvr *WebhookServer) serve(w http.ResponseWriter, r *http.Request) {
 	ar := v1beta1.AdmissionReview{}
 	if _, _, err := deserializer.Decode(body, nil, &ar); err != nil {
 		glog.Errorf("Can't decode body: %v", err)
-		admissionResponse = &v1beta1.AdmissionResponse {
-			Result: &metav1.Status {
+		admissionResponse = &v1beta1.AdmissionResponse{
+			Result: &metav1.Status{
 				Message: err.Error(),
 			},
 		}
