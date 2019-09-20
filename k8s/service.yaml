@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: dnsconfig-injector-webhook-svc
-  namespace: kube-system
+  namespace: kube-services
   labels:
     app: dnsconfig-injector
 spec:

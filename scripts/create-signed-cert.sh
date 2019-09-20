@@ -19,7 +19,7 @@ EOF
 
 service=dnsconfig-injector-webhook-svc
 secret=dnsconfig-injector-webhook-certs
-namespace=kube-system
+namespace=kube-services
 
 if [ ! -x "$(command -v openssl)" ]; then
     echo "openssl not found"

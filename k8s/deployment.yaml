@@ -2,7 +2,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: dnsconfig-injector-webhook-dp
-  namespace: kube-system
+  namespace: kube-services
   labels:
     app: dnsconfig-injector
 spec:
@@ -12,6 +12,7 @@ spec:
       labels:
         app: dnsconfig-injector
     spec:
+      priorityClassName: k8s-cluster-critical
       containers:
         - name: dnsconfig-injector
           image: pasientskyhosting/ps-dnsconfig-injector:v1

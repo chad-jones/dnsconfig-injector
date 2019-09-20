@@ -25,7 +25,7 @@ kubectl apply -R -f k8s/
 # kind: ConfigMap
 # metadata:
 #   name: dnsconfig-injector-webhook-configmap
-#   namespace: kube-system
+#   namespace: kube-services
 # data:
 #   dnsconfig.yaml: |
 #     nameservers:
@@ -43,7 +43,7 @@ kubectl apply -R -f k8s/
 
 1. The dsnconfig inject webhook should be running
 ```
-# kubectl -n kube-system get pods
+# kubectl -n kube-services get pods
 NAME                                                  READY     STATUS    RESTARTS   AGE
 dnsconfig-injector-webhook-deployment-bbb689d69-882dd   1/1       Running   0          5m
 ```
@@ -55,7 +55,7 @@ dnsconfig-injector-webhook-deployment-bbb689d69-882dd   1/1       Running   0   
 NAME          STATUS    AGE       LABELS
 default       Active    18h       dnsconfig-injector=enabled
 kube-public   Active    18h
-kube-system   Active    18h
+kube-services   Active    18h
 ```
 
 3. Deploy an app in Kubernetes cluster, take `sleep` app as an example
