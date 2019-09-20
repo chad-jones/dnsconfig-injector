@@ -1,5 +1,5 @@
-NAME  ?=dnsconfig-injector
-REGISTRY ?=karampok
+NAME  ?=ps-dnsconfig-injector
+REGISTRY ?=pasientskyhosting
 ARGS ?=
 
 pack:
